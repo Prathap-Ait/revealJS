@@ -964,21 +964,41 @@
                   src="images/A blue cube with lines and dots Description automatically generated.png"
                   alt="Company Logo"
                   class="company-logo"
-                />              </header>
-              <main class="slide-content">
-                <h1 style="color: #002060; font-size: 28px; margin-bottom: 10px;">AI Development Kit</h1>
+                />              </header>              <main class="slide-content">
                 <div style="margin-bottom: 40px;">
-                  <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; font-style: normal;">
-                    Explore our comprehensive AI Development Kit (ADK), a powerful toolkit designed to simplify, accelerate, and standardize the development of intelligent agents. The ADK includes sample implementations, reusable templates, and proven best practices to help teams build robust AI solutions with minimal setup time. It ensures consistency, reliability, and scalability across your projects—whether you're starting from scratch or optimizing existing systems. <br>
-                    With real-world examples, detailed documentation, and modular components, developers can focus on innovation and problem-solving instead of infrastructure. From rapid prototyping to enterprise-grade deployments, the ADK is your all-in-one solution for efficient AI development.
-                  </p>                  <div style="margin: 0; padding: 0;">
-                    <p style="font-size: 17px; margin-bottom: 10px; text-align: left; margin: 0;">
-                      <strong>Key Features:</strong> Pre-built agent templates, Implementation examples, Best practice patterns, Integration guidelines.
+                  <!-- Architecture Design Studio -->
+                  <div style="margin-bottom: 30px;">
+                    <h2 style="color: #002060; font-size: 24px; margin-bottom: 15px;">
+                    Architecture Design Studio
+                    </h2>
+                    <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                      Design resilient, scalable AI infrastructure with support for multi-cloud and hybrid environments. Build a solid foundation that grows with your needs—ensuring flexibility, reliability, and enterprise-grade security.
                     </p>
                   </div>
-                  <p style="font-size: 16px;">
+
+                  <!-- Low-Code Deployment Engine -->
+                  <div style="margin-bottom: 30px;">
+                    <h2 style="color: #002060; font-size: 24px; margin-bottom: 15px;">
+                      Low-Code Deployment Engine
+                    </h2>
+                    <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                      Accelerate your go-to-market with a powerful low-code platform. Deploy production-ready models in minutes using modular, enterprise-proven templates—no deep engineering expertise required.
+                    </p>
+                  </div>
+
+                  <!-- Performance Optimization -->
+                  <div style="margin-bottom: 30px;">
+                    <h2 style="color: #002060; font-size: 24px; margin-bottom: 15px;">
+                    Performance Optimization
+                    </h2>
+                    <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                      Maximize efficiency at every layer. Continuously monitor and fine-tune models and infrastructure to deliver optimal performance, reduced latency, and cost-effective scalability.
+                    </p>
+                  </div>
+
+                  <p style="font-size: 16px; margin-top: 20px;">
                     <a href="https://github.com/spbreed/adk-samples/tree/main/agents" target="_blank" style="color: #002060;">
-                      <strong><u>Access AI Development Kit Samples →</u></strong>
+                      <strong><u>Access Code Craft Studio →</u></strong>
                     </a>
                   </p>
                 </div>
@@ -1081,26 +1101,47 @@
 
         try {
           // Initialize jsPDF
-          const { jsPDF } = window.jspdf;
-          const doc = new jsPDF({
+          const { jsPDF } = window.jspdf;          const doc = new jsPDF({
             orientation: 'landscape',
             unit: 'mm',
-            format: 'a4'
+            format: 'a4',
+            compress: true,
+            putOnlyUsedFonts: true,
+            hotfixes: ['px_scaling']
           });
 
           // Get all slides
           const allSlides = document.querySelectorAll('.reveal .slides > section');
-
-          // Process each slide
+      // Process each slide
           for (let i = 0; i < allSlides.length; i++) {
             // Go to this slide
             Reveal.slide(i);
 
             // Wait for slide transition
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 500));            // Hide download button before capture
+            const downloadBtn = document.querySelector('.download-btn');
+            if (downloadBtn) {
+              downloadBtn.style.display = 'none';
+            }
 
             // Capture the current slide
             const slideElement = document.querySelector('.reveal .present');
+
+            // Find all links in the current slide
+            const links = slideElement.querySelectorAll('a');
+            const linkPositions = [];
+
+            // Store link positions before capture
+            links.forEach(link => {
+              const rect = link.getBoundingClientRect();
+              linkPositions.push({
+                url: link.href,
+                x: rect.left,
+                y: rect.top,
+                width: rect.width,
+                height: rect.height
+              });
+            });
 
             // Use html2canvas to capture the slide
             const canvas = await html2canvas(slideElement, {
@@ -1130,14 +1171,44 @@
             const imgX = (pdfWidth - imgWidth * ratio) / 2;
             const imgY = (pdfHeight - imgHeight * ratio) / 2;
 
-            doc.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+            doc.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);            // Add clickable links
+            linkPositions.forEach(link => {
+              // Get viewport dimensions
+              const viewportWidth = window.innerWidth;
+              const viewportHeight = window.innerHeight;
+
+              // Calculate relative positions (as percentages)
+              const relativeX = link.x / viewportWidth;
+              const relativeY = link.y / viewportHeight;
+              const relativeWidth = link.width / viewportWidth;
+              const relativeHeight = link.height / viewportHeight;
+
+              // Convert to PDF coordinates
+              const linkX = imgX + (relativeX * imgWidth * ratio);
+              const linkY = imgY + (relativeY * imgHeight * ratio);
+              const linkWidth = relativeWidth * imgWidth * ratio;
+              const linkHeight = relativeHeight * imgHeight * ratio;
+
+              // Add link annotation with URL
+              doc.link(
+                linkX,
+                linkY,
+                linkWidth,
+                linkHeight,
+                { url: link.url }
+              );
+            });
           }
 
           // Save the PDF
-          doc.save('fusefy_presentation.pdf');
-
-          // Hide loading overlay
+          doc.save('fusefy_presentation.pdf');          // Hide loading overlay
           document.getElementById('loadingOverlay').style.display = 'none';
+
+          // Show download button again
+          const downloadBtn = document.querySelector('.download-btn');
+          if (downloadBtn) {
+            downloadBtn.style.display = 'flex';
+          }
 
         } catch (error) {
           console.error('PDF generation failed:', error);
@@ -1146,5 +1217,5 @@
         }
       });
     </script>
-  </body>
+  </body>
 </html>
